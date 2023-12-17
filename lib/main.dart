@@ -1,32 +1,50 @@
 import 'package:flutter/material.dart';
-import 'package:islame/home/hadeth/hadeth_details.dart';
-import 'package:islame/home/home_screen.dart';
-import 'package:islame/home/quran/sura_details_screen.dart';
-import 'package:islame/myTheme.dart';
-import 'package:islame/splash_screen.dart';
+import 'package:islami_app/providers/provider.dart';
+import 'package:islami_app/quran/sura_details.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'hadeth/hadeth_details.dart';
+import 'home/home.dart';
+import 'my_theme.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(ChangeNotifierProvider(
+      create: (context) => AppConfigProvider(), child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  late AppConfigProvider provider;
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    provider = Provider.of<AppConfigProvider>(context);
+    getSharedPref();
     return MaterialApp(
-      home: const SplashScreen(),
       debugShowCheckedModeBanner: false,
-      theme: MyThemeData.lightTheme,
-      darkTheme: MyThemeData.darkTheme,
-      title: 'Islami',
       routes: {
-        HomeScreen.routName: (context) => HomeScreen(),
-        SuraDetailsScreen.routeName: (context) => SuraDetailsScreen(),
-        HadethDetails.routeName: (context) => HadethDetails(),
+        HomeScreen.Route_Name: (context) => HomeScreen(),
+        SuraDetails.Route_Name: (context) => SuraDetails(),
+        HadethDetails.Route_Name: (context) => HadethDetails(),
       },
-      initialRoute: HomeScreen.routName,
+      initialRoute: HomeScreen.Route_Name,
+      theme: MyThemeData.lightMode,
+      darkTheme: MyThemeData.darkMode,
+      themeMode: provider.appTheme,
+      locale: Locale(provider.appLanguage),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
     );
+  }
+
+  void getSharedPref() async {
+    final prefs = await SharedPreferences.getInstance();
+    String language = prefs.getString('lang') ?? 'en';
+    provider.appLanguage = language;
+    if (prefs.getString('theme') == 'dark') {
+      provider.appTheme = ThemeMode.dark;
+    } else {
+      provider.appTheme = ThemeMode.light;
+    }
   }
 }
